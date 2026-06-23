@@ -1,0 +1,13 @@
+# Project 3 — inference dependencies (generate_chessboard_image / run_project3_demo)
+#
+# The synthetic-render stage also requires Blender installed separately
+# (see README "Setup"). These are the only Python packages the evaluation
+# function needs.
+numpy>=1.24,<2
+Pillow>=9.0.0
+torch>=1.12
+
+# --- Optional: only needed to RETRAIN (the training/ reference code) ---
+# Inference does NOT need these. Training also requires a cloned pix2pix/CUT
+# framework on the cluster (see README "Training").
+# torchvision>=0.13

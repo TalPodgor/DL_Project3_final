@@ -1,0 +1,99 @@
+----------------- Options ---------------
+               batch_size: 1                             
+                    beta1: 0.5                           
+                    beta2: 0.999                         
+          checkpoints_dir: ./checkpoints                 
+           continue_train: False                         
+                crop_size: 512                           	[default: 256]
+                cx_band_h: 0.5                           
+             cx_crop_size: 16                            
+             cx_feat_size: 32                            	[default: 48]
+                 cx_level: 2                             
+                 dataroot: ./datasets/chess_v5_oblique_aligned_bright	[default: placeholder]
+             dataset_mode: v5_oblique                    	[default: geom_aligned]
+                direction: AtoB                          
+              display_env: main                          
+             display_freq: 400                           
+               display_id: -1                            	[default: None]
+            display_ncols: 4                             
+             display_port: 8097                          
+           display_server: http://localhost              
+          display_winsize: 256                           
+               easy_label: experiment_name               
+                    epoch: latest                        
+              epoch_count: 1                             
+          evaluation_freq: 5000                          
+              g_init_path: ./checkpoints/chess_v5_aligned_silABC/latest_net_G.pth	[default: ]
+                 gan_mode: lsgan                         
+                  gpu_ids: 0                             
+                  head_px: 20                            
+                init_gain: 0.02                          
+                init_type: xavier                        
+                 input_nc: 3                             
+                  isTrain: True                          	[default: None]
+                l1_head_w: 0.0                           
+               l1_piece_w: 0.7                           	[default: 0.1]
+              l1_shadow_w: 0.0                           
+               lambda_GAN: 1.0                           
+                lambda_L1: 7.5                           	[default: 10.0]
+               lambda_VGG: 3.0                           
+                lambda_cx: 0.5                           	[default: 0.0]
+              lambda_edge: 1.0                           	[default: 0.0]
+              lambda_feat: 10.0                          
+         lambda_piece_cls: 0.5                           
+          lambda_piece_cx: 0.0                           
+          lambda_piece_fm: 10.0                          
+         lambda_piece_gan: 1.0                           
+         lambda_piece_vgg: 5.0                           
+                load_size: 512                           	[default: 286]
+                       lr: 0.0002                        
+           lr_decay_iters: 50                            
+                lr_policy: linear                        
+         max_dataset_size: inf                           
+                    model: paired_geom_hd                	[default: cut]
+                 n_epochs: 40                            	[default: 200]
+           n_epochs_decay: 20                            	[default: 200]
+               n_layers_D: 3                             
+                     name: chess_v5_bright_silABC        	[default: experiment_name]
+                      ndf: 64                            
+                     netD: basic                         
+                     netG: resnet_9blocks                
+                      ngf: 64                            
+             no_antialias: False                         
+          no_antialias_up: False                         
+               no_dropout: True                          
+                  no_flip: False                         
+                  no_html: False                         
+                    normD: instance                      
+                    normG: instance                      
+                    num_D: 2                             
+        num_geom_channels: 3                             
+          num_seg_classes: 15                            
+              num_threads: 4                             
+                output_nc: 3                             
+                    phase: train                         
+      piece_class_balance: 1                             
+           piece_cls_path: ./checkpoints/square_eval.pth 
+          piece_crop_size: 96                            
+          piece_crops_max: 64                            
+                piece_ndf: 64                            
+                piece_win: 112                           
+                pool_size: 0                             
+               preprocess: resize_and_crop               
+          pretrained_name: None                          
+               print_freq: 100                           
+         random_scale_max: 3.0                           
+             save_by_iter: False                         
+          save_epoch_freq: 5                             
+         save_latest_freq: 5000                          
+          seg_bright_gate: 30                            
+      seg_color_threshold: 75                            
+           serial_batches: False                         
+                shadow_px: 6                             
+stylegan2_G_num_downsampling: 1                             
+                   suffix:                               
+         update_html_freq: 1000                          
+       v5_semantic_source: fen_silhouette                	[default: fen]
+                  verbose: False                         
+                  vgg_max: 224                           	[default: 256]
+----------------- End -------------------

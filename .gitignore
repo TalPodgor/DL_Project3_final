@@ -1,0 +1,13 @@
+# Inference outputs (created at runtime by generate_chessboard_image)
+results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# OS / tooling
+.DS_Store
