@@ -145,7 +145,7 @@ requirements.txt
 The paired dataset (`chess_v5_oblique_aligned_bright`, 876 paired PNGs:
 left = synthetic source, right = real target) lives on the shared drive:
 
-> https://drive.google.com/drive/folders/1oJpGFstyY0AmyeIcL4Cjk1B03UtL3_cN
+> https://drive.google.com/drive/folders/1sEadre4eClRUCMVIlLxjYk526JyuiNPp
 
 Labels in this repo (format `image_name, fen, view`):
 - `data/gt.csv` — all 876 rows (736 train: games 4,5,6,7 · 140 test: game 2).
