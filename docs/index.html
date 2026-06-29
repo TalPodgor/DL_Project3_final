@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthetic-to-Real Chessboard Image Generation from FEN</title>
+<meta name="description" content="A paired, geometry-conditioned pix2pixHD translator that renders a chessboard from a FEN and turns it into a realistic photo while preserving the exact board state. BGU Intro to Deep Learning — Project 3.">
+<meta property="og:title" content="Synthetic-to-Real Chessboard Image Generation from FEN">
+<meta property="og:description" content="Render a chessboard from a FEN, then translate it into a realistic photo while preserving the exact board state. BGU Intro to Deep Learning — Project 3.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/teaser_triptych.jpg">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================ NAV -->
+<nav class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="nav-brand" href="#top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#e0a44a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h6M12 3v4M8 11h8l-1.2 5H9.2L8 11zM10 7l-2 4M14 7l2 4M7 20h10M8 16l-.6 4M16 16l.6 4"/></svg>
+      <span>FEN&nbsp;→&nbsp;Real Chessboard</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <div class="nav-menu">
+      <div class="nav-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#ablation">Ablation</a>
+        <a href="#limitations">Limitations</a>
+        <a href="#cite">Cite</a>
+      </div>
+      <div class="nav-cta">
+        <a class="ghost" href="assets/project3_final_report.pdf" target="_blank" rel="noopener">Report</a>
+        <a class="solid" href="https://github.com/TalPodgor/DL_Project3_final" target="_blank" rel="noopener">Code</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================ HERO -->
+<header class="hero" id="top">
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Ben-Gurion University · Intro to Deep Learning · Project 3</span>
+    <h1>Synthetic-to-Real <span class="accent">Chessboard</span> Image Generation from FEN</h1>
+    <p class="tagline">Render a clean chessboard from a FEN string and a camera viewpoint, then translate it into a realistic photograph — while preserving the <em>exact</em> board state.</p>
+
+    <p class="authors"><b>Tal Podgor</b> &nbsp;·&nbsp; <b>Ilay Vanunu</b> &nbsp;·&nbsp; <b>Ran Packler</b></p>
+    <p class="affil">Ben-Gurion University of the Negev · Intro to Deep Learning — Final Project 3</p>
+
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="assets/project3_final_report.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 13h6M9 17h6"/></svg>
+        Read the Report (PDF)
+      </a>
+      <a class="btn btn-dark" href="https://github.com/TalPodgor/DL_Project3_final" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.04 10.04 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+        View Code on GitHub
+      </a>
+    </div>
+
+    <figure class="hero-figure reveal">
+      <img src="assets/teaser_triptych.jpg" alt="Triptych: clean synthetic Blender render, the model's realistic translation, and the real target photograph of the same board position." width="1408" height="460">
+      <div class="triptych-labels">
+        <div><b>Synthetic input</b>FEN → Blender render</div>
+        <div><b>Our realistic output</b>chess_v5_bright_silABC</div>
+        <div><b>Real target</b>held-out photograph</div>
+      </div>
+    </figure>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================================================ ABSTRACT -->
+<section id="abstract">
+  <div class="wrap">
+    <span class="kicker">Abstract</span>
+    <div class="abstract prose reveal">
+      <p>This project addresses chessboard image generation from a <b>FEN</b> position and a requested camera viewpoint. The required output is a clean synthetic chessboard image and a more realistic image that <b>preserves the same board state</b>. We treat the problem as controlled synthetic-to-real image translation. Early unpaired translation with CUT/CycleGAN produced realistic texture but did not reliably preserve exact board structure. The final system therefore uses a <b>paired, pix2pixHD-style conditional generator</b> augmented with chess-specific semantic and geometric conditioning from Blender: an RGB render, a FEN semantic layout, a rendered silhouette, a depth-like map, and piece-edge cues.</p>
+      <p>The selected checkpoint, <b>chess_v5_bright_silABC</b>, is trained on a camera-aligned Blender dataset with per-game oblique elevations of 38–44°. On 140 held-out game-2 boards it achieves <b>0.922</b> square accuracy, <b>0.992</b> occupancy accuracy, <b>0.804</b> occupied-piece type accuracy, and <b>0.757</b> whole-board occupancy exactness under an independent square classifier. Qualitatively, the model gives the best practical trade-off between realistic wooden-board appearance and board-state preservation — although piece topology artifacts remain a central limitation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ HIGHLIGHTS -->
+<section id="highlights">
+  <div class="wrap">
+    <span class="kicker">At a glance</span>
+    <h2 class="sec">Four ideas that made it work</h2>
+    <div class="cards">
+      <div class="card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4"/></svg></div>
+        <h3>Paired, not unpaired</h3>
+        <p>A pix2pixHD-style conditional translator with direct paired supervision — <b>not</b> CycleGAN or CUT, which moved pieces and hallucinated texture on empty squares.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></div>
+        <h3>21-channel conditioning</h3>
+        <p>The generator sees 3 RGB + 15 one-hot FEN-silhouette segmentation + 3 geometry channels (depth, mask, edge) — all derived from the FEN alone at inference.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 9 9M12 12l5-3"/><circle cx="12" cy="12" r="1.6"/></svg></div>
+        <h3>Camera geometry &gt; loss tuning</h3>
+        <p>Matching the synthetic camera to the real photos (per-game <b>~40.7°</b> elevation vs. an old 54.9° global) shrank the domain gap more than any loss term.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8v8l7 5 7-5V8"/></svg></div>
+        <h3>An honest ceiling</h3>
+        <p>Clean piece topology vs. photographic realism is a persistent trade-off under low-res automatic supervision — documented with quantitative and visual ablations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ METHOD -->
+<section id="method">
+  <div class="wrap">
+    <span class="kicker">Method</span>
+    <h2 class="sec">From a FEN string to a realistic photo</h2>
+    <p class="sec-lead">The required function is <code>generate_chessboard_image(fen, viewpoint)</code>. It renders a clean synthetic board with Blender, derives semantic and geometric control maps from that render, and feeds a 21-channel tensor to a conditional generator that outputs the realistic image. Crucially, every control map is derived from the FEN alone — no real photo is needed at inference.</p>
+
+    <!-- pipeline -->
+    <div class="pipeline reveal">
+      <div class="stage">
+        <div class="badge">Input</div>
+        <div class="box"><strong>FEN + viewpoint</strong><span>board state &amp; which color faces the camera</span></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">Render</div>
+        <div class="box"><strong>Blender</strong><span>oblique 44° synthetic RGB + silhouette + depth</span></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">Condition</div>
+        <div class="box"><strong>21-ch tensor</strong><span>RGB + one-hot FEN seg + geometry</span></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">Translate</div>
+        <div class="box"><strong>Generator</strong><span>antialiased ResNet-9 (instance norm)</span></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">Output</div>
+        <div class="box"><strong>Realistic photo</strong><span>synthetic.png · realistic.png · side_by_side.png</span></div>
+      </div>
+    </div>
+
+    <!-- 21-channel breakdown -->
+    <h3 style="margin:46px 0 4px;font-size:1.35rem;">The 21-channel input</h3>
+    <p class="muted" style="margin:0 0 6px;max-width:70ch;">The semantic map uses <code>fen_silhouette</code> mode: full-cell FEN information protects board occupancy, while rendered silhouette pixels give an accurate outline of visible piece shapes.</p>
+    <div class="channels reveal">
+      <div>
+        <div class="chan-bar">
+          <div class="chan-rgb">3 · RGB</div>
+          <div class="chan-seg">15 · one-hot FEN-silhouette segmentation</div>
+          <div class="chan-geo">3 · geom</div>
+        </div>
+        <ul class="chan-list">
+          <li><span class="n">3</span><span><b>Synthetic RGB</b> — the oblique Blender render of the board.</span></li>
+          <li><span class="n">15</span><span><b>One-hot silhouette segmentation</b> — empty light/dark squares + 12 piece classes, built from the FEN and the rendered silhouette.</span></li>
+          <li><span class="n">3</span><span><b>Geometry</b> — depth-like render, piece-silhouette mask, and silhouette boundary (edge) channel.</span></li>
+        </ul>
+      </div>
+      <div class="chan-imgs">
+        <figure><img src="assets/method_rgb.jpg" alt="Synthetic RGB render" width="420" height="420"><figcaption>RGB render</figcaption></figure>
+        <figure><img src="assets/method_seg.png" alt="One-hot FEN-silhouette segmentation, colored per piece class" width="420" height="420"><figcaption>FEN-silhouette seg</figcaption></figure>
+        <figure><img src="assets/method_depth.png" alt="Depth-like geometry map" width="420" height="420"><figcaption>Depth geometry</figcaption></figure>
+      </div>
+    </div>
+
+    <!-- discriminators -->
+    <div class="callout light reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div>
+        <h4>Two discriminators keep both scales honest</h4>
+        <p>A <b>global multi-scale PatchGAN</b> judges the whole board, while a <b>local class-conditional piece-crop discriminator</b> (96 px crops + one-hot piece label) puts extra pressure on occupied squares so small pieces stay legible.</p>
+      </div>
+    </div>
+
+    <!-- loss recipe -->
+    <h3 style="margin:46px 0 4px;font-size:1.35rem;">The "silABC" loss recipe</h3>
+    <p class="muted" style="margin:0 0 4px;max-width:70ch;">On top of the paired GAN + feature-matching + VGG + masked-L1 objectives, three chess-specific loss groups give the model its name.</p>
+    <div class="recipe">
+      <div class="r reveal"><span class="tag">A</span><h4>Silhouette semantics</h4><p>Silhouette-shaped semantic conditioning that kills square halos and wood bleed onto empty cells.</p></div>
+      <div class="r reveal"><span class="tag">B</span><h4>Edge &amp; piece L1</h4><p>A silhouette-edge (Sobel) loss plus piece-weighted L1 for sharp, anti-halo piece outlines.</p></div>
+      <div class="r reveal"><span class="tag">C</span><h4>Local piece objectives</h4><p>Class-conditional piece-crop GAN + feature-matching + VGG + a frozen square-classifier loss for legible small pieces.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ RESULTS -->
+<section id="results">
+  <div class="wrap">
+    <span class="kicker">Results</span>
+    <h2 class="sec">Quantitative evaluation</h2>
+    <p class="sec-lead">All numbers are on <b>140 held-out boards from game 2</b> (training used games 4–7). A held-out <em>game</em> split tests generalization to unseen positions and viewpoints rather than memorizing one board sequence. The main evaluator is an independent ResNet-18 square classifier trained on real board crops.</p>
+
+    <div class="stats reveal">
+      <div class="stat"><div class="v alt">0.992</div><div class="l">Occupancy</div></div>
+      <div class="stat"><div class="v">0.922</div><div class="l">Square acc.</div></div>
+      <div class="stat"><div class="v">0.804</div><div class="l">Piece type</div></div>
+      <div class="stat"><div class="v">0.757</div><div class="l">Whole-board exact</div></div>
+      <div class="stat"><div class="v alt">0.0057</div><div class="l">Phantom rate</div></div>
+      <div class="stat"><div class="v alt">0.013</div><div class="l">Missing rate</div></div>
+    </div>
+    <p class="stats-note">⚖️ The selected model is <b>not</b> the winner of every scalar metric — a sibling run scores marginally higher on the classifier. Final selection used a stricter practical criterion: preserve a realistic appearance without milky or transparent piece artifacts. <code>bright_silABC</code> was the best overall <b>visual</b> trade-off.</p>
+
+    <figure class="fig reveal">
+      <img src="assets/fig1_qualitative.jpg" alt="Three rows, each showing the synthetic input, the bright_silABC output, and the real target for a held-out test board." width="540" height="630">
+      <figcaption><b>Figure 1.</b> Final qualitative examples. Each row: the Blender <b>synthetic input</b>, the selected <b>bright_silABC</b> output, and the <b>real target</b> from the held-out test game.</figcaption>
+    </figure>
+
+    <!-- before/after slider -->
+    <h3 style="margin:54px 0 6px;font-size:1.35rem;">Interactive: synthetic → realistic</h3>
+    <p class="muted" style="margin:0 0 6px;max-width:70ch;">Drag the handle to wipe between the clean synthetic input and the model's realistic translation of the <em>same</em> position. These are real held-out test boards.</p>
+    <div class="ba-tools reveal">
+      <span class="lab">Board:</span>
+      <button class="chip active" data-board="b1">Dense opening</button>
+      <button class="chip" data-board="b2">Mid-game</button>
+      <button class="chip" data-board="b3">Later position</button>
+    </div>
+    <div class="ba reveal" id="ba" aria-label="Before/after slider: synthetic versus realistic">
+      <img class="after"  id="baAfter"  src="assets/ba_b1_real.jpg"  alt="Realistic translation output" width="512" height="512">
+      <img class="before" id="baBefore" src="assets/ba_b1_synth.jpg" alt="Synthetic Blender input" width="512" height="512">
+      <span class="ba-tag tag-before">Synthetic</span>
+      <span class="ba-tag tag-after">Realistic</span>
+      <div class="ba-line" id="baLine"></div>
+      <div class="ba-grip" id="baGrip">⇆</div>
+    </div>
+    <p class="ba-caption">Left = synthetic Blender render · Right = <code>chess_v5_bright_silABC</code> output. Compare against the real target in Figure 1 above.</p>
+  </div>
+</section>
+
+<!-- ============================================================ ABLATION -->
+<section id="ablation">
+  <div class="wrap">
+    <span class="kicker">Ablation study</span>
+    <h2 class="sec">Why each design choice survived</h2>
+    <p class="sec-lead">Improving board-state metrics alone is not enough: components that force exact geometry can remove double-heads but often destroy the photo-like style. We ran ablations and negative tests to justify the final design.</p>
+
+    <div class="tbl-wrap reveal">
+      <table>
+        <thead><tr><th>Ablation</th><th>Hypothesis</th><th>Observed result</th><th>Decision</th></tr></thead>
+        <tbody>
+          <tr><td>Silhouette-only semantics</td><td>Silhouettes should encode piece layout</td><td>High phantom rate; no whole-board exactness</td><td><span class="pill no">Reject</span></td></tr>
+          <tr><td>Full-cell FEN + V5 geometry</td><td>FEN protects occupancy, geometry gives shape</td><td>Reached 1.0 occupancy on 16 probe boards</td><td><span class="pill keep">Keep</span></td></tr>
+          <tr><td>No piece classifier</td><td>Classifier loss might overfit / reward blobs</td><td>Some metrics up, but visual defects unsolved</td><td><span class="pill no">Not final</span></td></tr>
+          <tr><td>Geometry lock</td><td>Hard source geometry prevents double-heads</td><td>Double-heads drop, but pieces look washed &amp; synthetic</td><td><span class="pill no">Reject</span></td></tr>
+          <tr><td>Two-stream / piece composite</td><td>Separate foreground &amp; background generation</td><td>Style stayed OK; topology mostly unchanged</td><td><span class="pill no">Not enough</span></td></tr>
+          <tr><td>Parallax-8 source stretch</td><td>Pieces are still too short / top-down</td><td>Worse occupancy &amp; phantom rate; no double-head gain</td><td><span class="pill no">Reject</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-wrap reveal" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Run</th><th class="num">Square</th><th class="num">Occupancy</th><th class="num">Type</th><th class="num">Whole-board</th><th class="num">Phantom</th><th class="num">Missing</th></tr></thead>
+        <tbody>
+          <tr><td>bright_silAB</td><td class="num">0.9160</td><td class="num">0.9924</td><td class="num">0.7849</td><td class="num">0.6429</td><td class="num">0.0057</td><td class="num">0.0109</td></tr>
+          <tr class="sel"><td>bright_silABC <span class="pill keep">selected</span></td><td class="num">0.9221</td><td class="num">0.9916</td><td class="num">0.8040</td><td class="num">0.7571</td><td class="num">0.0057</td><td class="num">0.0130</td></tr>
+          <tr><td>silAB&nbsp;noPieceD</td><td class="num">0.9314</td><td class="num">0.9942</td><td class="num">0.8240</td><td class="num">0.7643</td><td class="num">0.0052</td><td class="num">0.0068</td></tr>
+          <tr><td>pcomp_srcshape</td><td class="num">0.9235</td><td class="num">0.9955</td><td class="num">0.7979</td><td class="num">0.7929</td><td class="num">0.0019</td><td class="num">0.0090</td></tr>
+          <tr><td>geometry lock</td><td class="num">0.6993</td><td class="num">0.8738</td><td class="num">0.3075</td><td class="num">0.0000</td><td class="num">0.0293</td><td class="num">0.2991</td></tr>
+          <tr><td>parallax8 fine-tune</td><td class="num">0.9094</td><td class="num">0.9846</td><td class="num">0.7879</td><td class="num">0.4500</td><td class="num">0.0167</td><td class="num">0.0130</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure class="fig reveal">
+      <img src="assets/fig2_ablation.jpg" alt="Qualitative ablation grid comparing silAB, silABC, geometry-lock, parallax8 and the real target across three boards." width="700" height="510">
+      <figcaption><b>Figure 2.</b> Qualitative ablation. <b>Geometry-lock</b> improves structure but looks synthetic; <b>parallax8</b> does not improve the selected <code>bright_silABC</code> model.</figcaption>
+    </figure>
+
+    <div class="callout reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2zM9 21h6M10 17v4M14 17v4"/></svg></div>
+      <div>
+        <h4>The key insight</h4>
+        <p>Forcing exact geometry (geometry-lock) crushes whole-board exactness from <b>0.757 → 0.0</b> and makes pieces washed and milky; naive parallax stretching regressed it to <b>0.45</b>. The remaining synthetic-to-real mismatch is <b>not</b> solved by a post-render geometric correction — matching the camera in the first place was what mattered.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ LIMITATIONS -->
+<section id="limitations">
+  <div class="wrap">
+    <span class="kicker">What didn't work · Limitations</span>
+    <h2 class="sec">An honest account</h2>
+    <p class="sec-lead">The selected model is a practical submission model, not a complete solution to realistic chess-piece synthesis. We report the failure modes as plainly as the wins.</p>
+    <div class="lims">
+      <div class="lim reveal"><h4><span class="x">✕</span> Unpaired translation</h4><p>CUT/CycleGAN transferred wooden style but had no pairwise penalty for moving pieces or inventing texture on empty squares — unacceptable when the state must stay exact.</p></div>
+      <div class="lim reveal"><h4><span class="x">✕</span> Hard geometry locking</h4><p>Injecting synthetic-looking piece structure made double-heads rarer, but the pieces came out washed, transparent, or milky — failing the realistic-image requirement (whole-board exactness fell to 0.0).</p></div>
+      <div class="lim reveal"><h4><span class="x">✕</span> Parallax-8 stretching</h4><p>Stretching the synthetic silhouettes upward before fine-tuning reduced neither the double-head audit nor the visual artifacts, and degraded whole-board exactness from 0.757 to 0.450.</p></div>
+      <div class="lim reveal"><h4><span class="x">✕</span> Automatic SAM masks</h4><p>At the 40–60 px piece scale, many white-piece pixels nearly match light board squares; SAM + color trimming often captured the square or fragmented the piece, so it was not used.</p></div>
+    </div>
+
+    <div class="callout light reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M5.6 18.4l2.1-2.1M12 18v3M18.4 18.4l-2.1-2.1M21 12h-3M18.4 5.6l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div>
+        <h4>The real limitation is the supervision, not the loss</h4>
+        <p>The real targets are board-rectified photographs of a 3D scene; a homography aligns the board plane but not the elevated heads of pieces, so pixel and perceptual losses supervise slightly incompatible shapes. The most credible next step is better data — manual real-piece masks, higher-resolution capture, or a tighter renderer/camera calibration — not more loss tuning. A sibling variant <b>silAB</b> (dropping loss C) is noted as future work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CITE -->
+<section id="cite">
+  <div class="wrap">
+    <span class="kicker">Citation &amp; resources</span>
+    <h2 class="sec">Cite this project</h2>
+    <div class="cite-wrap reveal">
+      <button class="copy-btn" id="copyBib">Copy</button>
+      <pre class="bibtex" id="bibtex"><span class="k">@misc</span>{podgor2026chessfen,
+  <span class="k">title</span>  = {Synthetic-to-Real Chessboard Image Generation from FEN},
+  <span class="k">author</span> = {Podgor, Tal and Vanunu, Ilay and Packler, Ran},
+  <span class="k">year</span>   = {2026},
+  <span class="k">note</span>   = {Intro to Deep Learning, Project 3, Ben-Gurion University of the Negev},
+  <span class="k">howpublished</span> = {\url{https://github.com/TalPodgor/DL_Project3_final}}
+}</pre>
+    </div>
+
+    <div class="links-row">
+      <a class="link-card reveal" href="https://github.com/TalPodgor/DL_Project3_final" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.04 10.04 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg></span>
+        <div><b>Code repository</b><span>TalPodgor/DL_Project3_final</span></div>
+      </a>
+      <a class="link-card reveal" href="assets/project3_final_report.pdf" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></span>
+        <div><b>Final report (PDF)</b><span>14-page write-up</span></div>
+      </a>
+      <a class="link-card reveal" href="https://drive.google.com/drive/folders/1sEadre4eClRUCMVIlLxjYk526JyuiNPp" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 7l2-3h12l2 3M4 7v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/></svg></span>
+        <div><b>Dataset &amp; artifacts</b><span>shared Google Drive</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================ FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-note">
+        <strong>Synthetic-to-Real Chessboard Image Generation from FEN</strong><br>
+        Tal Podgor · Ilay Vanunu · Ran Packler<br>
+        Ben-Gurion University of the Negev — Intro to Deep Learning, Project 3.
+      </div>
+      <div class="foot-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#ablation">Ablation</a>
+        <a href="https://github.com/TalPodgor/DL_Project3_final" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </div>
+    <p class="disclaimer">This gallery is <b>pre-rendered</b>: the generator runs in PyTorch and cannot execute in the browser, so the figures and the before/after slider show saved outputs from the held-out test set rather than live inference. Built as a static GitHub Pages site.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
